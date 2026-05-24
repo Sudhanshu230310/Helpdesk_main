@@ -30,7 +30,7 @@ startCronJobs();
 // Middleware
 // ============================================================
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : 'http://localhost:5173',
+  origin:  true,
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
