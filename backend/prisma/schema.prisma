@@ -1,0 +1,299 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model audit_logs {
+  id           BigInt    @id @default(autoincrement())
+  entity_type  String    @db.VarChar(50)
+  entity_id    String    @db.VarChar(100)
+  action       String    @db.VarChar(50)
+  performed_by String?   @db.Uuid
+  old_values   Json?
+  new_values   Json?
+  ip_address   String?   @db.VarChar(45)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  users        users?    @relation(fields: [performed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([entity_type, entity_id], map: "idx_audit_logs_entity")
+}
+
+model categories {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique @db.VarChar(150)
+  description   String?
+  is_active     Boolean?        @default(true)
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  subcategories subcategories[]
+  tickets       tickets[]
+}
+
+model email_logs {
+  id            BigInt    @id @default(autoincrement())
+  to_email      String    @db.VarChar(255)
+  subject       String    @db.VarChar(500)
+  body          String?
+  status        String?   @default("sent") @db.VarChar(20)
+  error_message String?
+  ticket_id     String?   @db.Uuid
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  tickets       tickets?  @relation(fields: [ticket_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model feedback {
+  id         Int       @id @default(autoincrement())
+  ticket_id  String    @unique @db.Uuid
+  user_id    String    @db.Uuid
+  rating     Int
+  comment    String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  tickets    tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model form_fields {
+  id                 Int           @id @default(autoincrement())
+  subcategory_id     Int
+  field_name         String        @db.VarChar(100)
+  field_label        String        @db.VarChar(200)
+  field_type         String        @default("text") @db.VarChar(50)
+  field_options      Json?
+  is_required        Boolean?      @default(false)
+  display_order      Int?          @default(0)
+  parent_field_id    Int?
+  parent_field_value String?       @db.VarChar(255)
+  created_at         DateTime?     @default(now()) @db.Timestamp(6)
+  form_fields        form_fields?  @relation("form_fieldsToform_fields", fields: [parent_field_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_form_fields  form_fields[] @relation("form_fieldsToform_fields")
+  subcategories      subcategories @relation(fields: [subcategory_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model holidays {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(150)
+  holiday_date DateTime  @unique @db.Date
+  is_recurring Boolean?  @default(false)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model otp_verifications {
+  id         Int         @id @default(autoincrement())
+  user_id    String?     @db.Uuid
+  email      String      @db.VarChar(255)
+  otp_code   String      @db.VarChar(10)
+  purpose    otp_purpose
+  ticket_id  String?     @db.Uuid
+  is_used    Boolean?    @default(false)
+  expires_at DateTime    @db.Timestamp(6)
+  created_at DateTime?   @default(now()) @db.Timestamp(6)
+  tickets    tickets?    @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([email, purpose], map: "idx_otp_email")
+}
+
+model subcategories {
+  id                    Int           @id @default(autoincrement())
+  category_id           Int
+  name                  String        @db.VarChar(150)
+  description           String?
+  assigned_team_id      Int?
+  is_active             Boolean?      @default(true)
+  created_at            DateTime?     @default(now()) @db.Timestamp(6)
+  last_assigned_user_id String?       @db.Uuid
+  escalation_hours      Int?          @default(48)
+  form_fields           form_fields[]
+  teams                 teams?        @relation(fields: [assigned_team_id], references: [id], onUpdate: NoAction)
+  categories            categories    @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                 users?        @relation(fields: [last_assigned_user_id], references: [id], onUpdate: NoAction)
+  tickets               tickets[]
+
+  @@unique([category_id, name])
+}
+
+model system_settings {
+  setting_key   String    @id @db.VarChar(100)
+  setting_value String    @db.VarChar(255)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model team_members {
+  id        Int       @id @default(autoincrement())
+  team_id   Int
+  user_id   String    @db.Uuid
+  joined_at DateTime? @default(now()) @db.Timestamp(6)
+  teams     teams     @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users     users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([team_id, user_id])
+}
+
+model notifications {
+  id          Int      @id @default(autoincrement())
+  user_id     String   @db.Uuid
+  title       String   @db.VarChar(200)
+  message     String
+  type        String   @default("info")
+  is_read     Boolean  @default(false)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  users       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model teams {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique @db.VarChar(150)
+  description   String?
+  team_lead_id  String?         @db.Uuid
+  is_active     Boolean?        @default(true)
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  subcategories subcategories[]
+  team_members  team_members[]
+  users         users?          @relation(fields: [team_lead_id], references: [id], onUpdate: NoAction)
+  tickets       tickets[]
+}
+
+model ticket_files {
+  id            Int       @id @default(autoincrement())
+  ticket_id     String    @db.Uuid
+  uploaded_by   String    @db.Uuid
+  original_name String    @db.VarChar(500)
+  stored_name   String    @db.VarChar(500)
+  file_size     Int?
+  mime_type     String?   @db.VarChar(100)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  tickets       tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         users     @relation(fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model ticket_interactions {
+  id          Int       @id @default(autoincrement())
+  ticket_id   String    @db.Uuid
+  user_id     String    @db.Uuid
+  message     String
+  is_internal Boolean?  @default(false)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  tickets     tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([ticket_id], map: "idx_ticket_interactions_ticket")
+}
+
+model ticket_items {
+  id            Int       @id @default(autoincrement())
+  ticket_id     String    @db.Uuid
+  item_name     String    @db.VarChar(200)
+  item_type     String?   @db.VarChar(100)
+  quantity      Int?      @default(1)
+  serial_number String?   @db.VarChar(100)
+  notes         String?
+  provided_by   String?   @db.Uuid
+  provided_at   DateTime? @default(now()) @db.Timestamp(6)
+  users         users?    @relation(fields: [provided_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tickets       tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model tickets {
+  id                                  String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ticket_number                       String                   @unique @db.VarChar(20)
+  title                               String                   @db.VarChar(300)
+  description                         String
+  category_id                         Int?
+  subcategory_id                      Int?
+  priority                            ticket_priority?         @default(medium)
+  status                              ticket_status?           @default(open)
+  created_by                          String                   @db.Uuid
+  assigned_to                         String?                  @db.Uuid
+  assigned_team_id                    Int?
+  form_data                           Json?
+  created_on_behalf                   Boolean?                 @default(false)
+  behalf_user_id                      String?                  @db.Uuid
+  with_user_since                     DateTime?                @db.Timestamp(6)
+  total_user_hold_time                Unsupported("interval")? @default(dbgenerated("'00:00:00'::interval"))
+  resolved_at                         DateTime?                @db.Timestamp(6)
+  closed_at                           DateTime?                @db.Timestamp(6)
+  created_at                          DateTime?                @default(now()) @db.Timestamp(6)
+  updated_at                          DateTime?                @default(now()) @db.Timestamp(6)
+  email_logs                          email_logs[]
+  feedback                            feedback?
+  otp_verifications                   otp_verifications[]
+  ticket_files                        ticket_files[]
+  ticket_interactions                 ticket_interactions[]
+  ticket_items                        ticket_items[]
+  teams                               teams?                   @relation(fields: [assigned_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_tickets_assigned_toTousers    users?                   @relation("tickets_assigned_toTousers", fields: [assigned_to], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_tickets_behalf_user_idTousers users?                   @relation("tickets_behalf_user_idTousers", fields: [behalf_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  categories                          categories?              @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_tickets_created_byTousers     users                    @relation("tickets_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subcategories                       subcategories?           @relation(fields: [subcategory_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([assigned_to], map: "idx_tickets_assigned_to")
+  @@index([category_id], map: "idx_tickets_category")
+  @@index([created_at], map: "idx_tickets_created_at")
+  @@index([created_by], map: "idx_tickets_created_by")
+  @@index([status], map: "idx_tickets_status")
+  @@index([assigned_team_id], map: "idx_tickets_team")
+}
+
+model users {
+  id                                    String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                                  String                @db.VarChar(150)
+  email                                 String                @unique @db.VarChar(255)
+  password_hash                         String?               @db.VarChar(255)
+  phone                                 String?               @db.VarChar(20)
+  role                                  user_role             @default(user)
+  department                            String?               @db.VarChar(100)
+  is_active                             Boolean?              @default(true)
+  is_verified                           Boolean?              @default(false)
+  ldap_dn                               String?               @db.VarChar(500)
+  created_at                            DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at                            DateTime?             @default(now()) @db.Timestamp(6)
+  session_token                         String?               @db.VarChar(100)
+  email_notifications_enabled           Boolean?              @default(true)
+  audit_logs                            audit_logs[]
+  feedback                              feedback[]
+  otp_verifications                     otp_verifications[]
+  subcategories                         subcategories[]
+  team_members                          team_members[]
+  teams                                 teams[]
+  ticket_files                          ticket_files[]
+  ticket_interactions                   ticket_interactions[]
+  ticket_items                          ticket_items[]
+  tickets_tickets_assigned_toTousers    tickets[]             @relation("tickets_assigned_toTousers")
+  tickets_tickets_behalf_user_idTousers tickets[]             @relation("tickets_behalf_user_idTousers")
+  tickets_tickets_created_byTousers     tickets[]             @relation("tickets_created_byTousers")
+  notifications                         notifications[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([role], map: "idx_users_role")
+}
+
+enum otp_purpose {
+  registration
+  ticket_closure
+}
+
+enum ticket_priority {
+  low
+  medium
+  high
+  critical
+}
+
+enum ticket_status {
+  open
+  in_progress
+  with_user
+  resolved
+  closed
+}
+
+enum user_role {
+  admin
+  technician
+  user
+  team_lead
+}
