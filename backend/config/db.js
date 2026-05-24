@@ -8,7 +8,11 @@ require('dotenv').config();
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech')
+    ssl: process.env.DATABASE_URL && (
+            process.env.DATABASE_URL.includes('neon.tech') ||
+            process.env.DATABASE_URL.includes('railway.app') ||
+            process.env.DATABASE_URL.includes('sslmode=require')
+        )
         ? { rejectUnauthorized: false }
         : false,
     max: 20,                // Maximum pool size
