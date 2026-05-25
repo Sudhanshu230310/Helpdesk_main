@@ -114,7 +114,7 @@ const requestAccessOtp = async (req, res, next) => {
         }
 
         const otp = await createOTP(email, 'registration', user.id);
-        await sendOtpEmail(email, otp, 'login');
+        sendOtpEmail(email, otp, 'login'); // Sent in background to avoid blocking the request
 
         res.json({ message: 'OTP sent to email.' });
     } catch (error) {
