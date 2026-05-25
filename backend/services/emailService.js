@@ -5,10 +5,9 @@ const transporter = require('../config/email');
 const { prisma } = require('../config/db');
 
 const SMTP_CONFIGURED = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
-const RESEND_CONFIGURED = !!process.env.RESEND_API_KEY;
 
 /**
- * Send an email (or log it if no mail provider is configured)
+ * Send an email (or log it if SMTP not configured)
  * Checks user preference unless isCritical is true.
  */
 const sendEmail = async ({ to, subject, html, isCritical = false }) => {
@@ -25,62 +24,25 @@ const sendEmail = async ({ to, subject, html, isCritical = false }) => {
     }
   }
 
-  // 1. Try sending via Resend HTTPS API if configured (Bypasses Render SMTP port blocks)
-  if (RESEND_CONFIGURED) {
-    try {
-      const fromEmail = process.env.SMTP_FROM || 'onboarding@resend.dev';
-      // Resend Free Tier requires sending from 'onboarding@resend.dev' if domain is unverified
-      const verifiedFrom = fromEmail.includes('@') && !fromEmail.includes('onboarding@resend.dev') 
-        ? fromEmail 
-        : 'Helpdesk <onboarding@resend.dev>';
-
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: verifiedFrom,
-          to: [to],
-          subject,
-          html,
-        }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        console.log(`📧 Email sent via Resend HTTPS API to ${to}: ${data.id}`);
-        return { messageId: data.id };
-      } else {
-        throw new Error(data.message || 'Resend API returned an error');
-      }
-    } catch (error) {
-      console.error(`❌ Failed to send email via Resend to ${to}:`, error.message);
-      // Fallback to SMTP if Resend fails, don't throw
-    }
+  if (!SMTP_CONFIGURED) {
+    console.log(`📧 [EMAIL LOG] To: ${to} | Subject: ${subject}`);
+    return { messageId: 'log-only', logged: true };
   }
 
-  // 2. Fallback to Nodemailer SMTP
-  if (SMTP_CONFIGURED) {
-    try {
-      const info = await transporter.sendMail({
-        from: process.env.SMTP_FROM || 'Helpdesk <noreply@helpdesk.com>',
-        to,
-        subject,
-        html,
-      });
-      console.log(`📧 Email sent via SMTP to ${to}: ${info.messageId}`);
-      return info;
-    } catch (error) {
-      console.error(`❌ Failed to send email via SMTP to ${to}:`, error.message);
-      return { error: error.message };
-    }
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'Helpdesk <noreply@helpdesk.com>',
+      to,
+      subject,
+      html,
+    });
+    console.log(`📧 Email sent to ${to}: ${info.messageId}`);
+    return info;
+  } catch (error) {
+    console.error(`❌ Failed to send email to ${to}:`, error.message);
+    // Don't throw — emails shouldn't break the flow
+    return { error: error.message };
   }
-
-  // 3. Fallback to Local Logging
-  console.log(`📧 [EMAIL LOG] To: ${to} | Subject: ${subject}`);
-  return { messageId: 'log-only', logged: true };
 };
 
 /**
