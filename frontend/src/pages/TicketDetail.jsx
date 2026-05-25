@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import API, { BASE_URL } from '../api/axios';
+import axios, { BASE_URL } from '../api/axios';
 import OtpModal from '../components/OtpModal';
 import FeedbackModal from '../components/FeedbackModal';
 import FileUpload from '../components/FileUpload';
@@ -66,7 +66,7 @@ const TicketDetail = ({ showNotification }) => {
 
     const fetchTicket = async () => {
         try {
-            const res = await API.get(`/tickets/${id}`);
+            const res = await axios.get(`/tickets/${id}`);
             setTicket(res.data.ticket);
             setInteractions(res.data.interactions || []);
             setFiles(res.data.files || []);
@@ -82,7 +82,7 @@ const TicketDetail = ({ showNotification }) => {
 
     const fetchTeamMembers = async () => {
         try {
-            const res = await API.get('/technicians/team-members');
+            const res = await axios.get('/technicians/team-members');
             setTeamMembers(res.data.members || []);
         } catch (err) { /* ignore */ }
     };
@@ -92,7 +92,7 @@ const TicketDetail = ({ showNotification }) => {
         if (!message.trim()) return;
         setSending(true);
         try {
-            await API.post(`/tickets/${id}/interact`, { message, is_internal: isInternal });
+            await axios.post(`/tickets/${id}/interact`, { message, is_internal: isInternal });
             setMessage('');
             fetchTicket();
         } catch (err) {
@@ -108,7 +108,7 @@ const TicketDetail = ({ showNotification }) => {
         try {
             const fd = new FormData();
             newFiles.forEach((file) => fd.append('files', file));
-            await API.post(`/tickets/${id}/upload`, fd, {
+            await axios.post(`/tickets/${id}/upload`, fd, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             setNewFiles([]);
@@ -124,7 +124,7 @@ const TicketDetail = ({ showNotification }) => {
     const handleStatusUpdate = async () => {
         if (!newStatus) return;
         try {
-            const res = await API.put(`/technicians/tickets/${id}/status`, { status: newStatus });
+            const res = await axios.put(`/technicians/tickets/${id}/status`, { status: newStatus });
             setNewStatus('');
             fetchTicket();
             showNotification('Status updated!');
@@ -143,7 +143,7 @@ const TicketDetail = ({ showNotification }) => {
     const handlePriorityUpdate = async () => {
         if (!newPriority) return;
         try {
-            await API.put(`/tickets/${id}/priority`, { priority: newPriority });
+            await axios.put(`/tickets/${id}/priority`, { priority: newPriority });
             setNewPriority('');
             fetchTicket();
             showNotification('Priority updated!');
@@ -154,7 +154,7 @@ const TicketDetail = ({ showNotification }) => {
 
     const handleReopenTicket = async () => {
         try {
-            await API.post(`/tickets/${id}/reopen`);
+            await axios.post(`/tickets/${id}/reopen`);
             fetchTicket();
             showNotification('Ticket reopened successfully!');
         } catch (err) {
@@ -165,7 +165,7 @@ const TicketDetail = ({ showNotification }) => {
     const handleAssign = async () => {
         if (!assignTo) return;
         try {
-            await API.put(`/technicians/tickets/${id}/assign`, { assigned_to: assignTo });
+            await axios.put(`/technicians/tickets/${id}/assign`, { assigned_to: assignTo });
             setAssignTo('');
             fetchTicket();
             showNotification('Ticket assigned!');
@@ -176,7 +176,7 @@ const TicketDetail = ({ showNotification }) => {
 
     const handleRequestClose = async () => {
         try {
-            const res = await API.post(`/tickets/${id}/request-close`);
+            const res = await axios.post(`/tickets/${id}/request-close`);
             if (res.data.otpRequired === false) {
                 // Directly close if OTP is disabled
                 await handleCloseWithOtp(null);
@@ -195,14 +195,14 @@ const TicketDetail = ({ showNotification }) => {
         const actualEmail = ticket?.behalf_user_id
             ? ticket?.creator_email // or behalf user email — we need the actual
             : ticket?.creator_email;
-        await API.post(`/tickets/${id}/close`, { otp, email: actualEmail });
+        await axios.post(`/tickets/${id}/close`, { otp, email: actualEmail });
         setShowOtp(false);
         fetchTicket();
         showNotification('Ticket closed successfully!');
     };
 
     const handleSubmitFeedback = async (rating, comment) => {
-        await API.post(`/tickets/${id}/feedback`, { rating, comment });
+        await axios.post(`/tickets/${id}/feedback`, { rating, comment });
         fetchTicket();
         showNotification('Feedback submitted!');
     };
@@ -210,7 +210,7 @@ const TicketDetail = ({ showNotification }) => {
     const handleAddItem = async (e) => {
         e.preventDefault();
         try {
-            await API.post(`/tickets/${id}/items`, itemForm);
+            await axios.post(`/tickets/${id}/items`, itemForm);
             setItemForm({ item_name: '', item_type: '', quantity: 1, serial_number: '', notes: '' });
             setShowItemForm(false);
             fetchTicket();

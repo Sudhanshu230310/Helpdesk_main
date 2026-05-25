@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import API from '../api/axios';
+import axios from '../api/axios';
 import DynamicForm from '../components/DynamicForm';
 import FileUpload from '../components/FileUpload';
 import { HiOutlinePlusCircle } from 'react-icons/hi';
@@ -32,7 +32,7 @@ const TicketCreate = ({ showNotification }) => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await API.get('/tickets/categories');
+                const res = await axios.get('/tickets/categories');
                 setCategories(res.data.categories || []);
             } catch (err) {
                 console.error('Failed to load categories:', err);
@@ -75,7 +75,7 @@ const TicketCreate = ({ showNotification }) => {
         setLoading(true);
         try {
             // Create ticket
-            const res = await API.post('/tickets', {
+            const res = await axios.post('/tickets', {
                 ...form,
                 category_id: parseInt(form.category_id),
                 subcategory_id: form.subcategory_id ? parseInt(form.subcategory_id) : null,
@@ -88,7 +88,7 @@ const TicketCreate = ({ showNotification }) => {
             if (files.length > 0) {
                 const fd = new FormData();
                 files.forEach((file) => fd.append('files', file));
-                await API.post(`/tickets/${ticketId}/upload`, fd, {
+                await axios.post(`/tickets/${ticketId}/upload`, fd, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             }

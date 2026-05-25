@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import API from '../api/axios';
+import axios from '../api/axios';
 import TicketCard from '../components/TicketCard';
 import {
     HiOutlineTicket, HiOutlineClock, HiOutlineCheckCircle,
@@ -25,8 +25,8 @@ const Dashboard = () => {
         const fetchData = async () => {
             try {
                 const [statsRes, ticketsRes] = await Promise.all([
-                    API.get('/admin/dashboard'),
-                    API.get('/tickets', { params: { limit: 100 } }),
+                    axios.get('/admin/dashboard'),
+                    axios.get('/tickets', { params: { limit: 100 } }),
                 ]);
                 setStats(statsRes.data.stats);
                 setRecentTickets(ticketsRes.data.tickets);

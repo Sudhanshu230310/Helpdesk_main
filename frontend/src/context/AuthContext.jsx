@@ -2,7 +2,7 @@
 // Auth Context — Manage authentication state
 // ============================================================
 import { createContext, useContext, useState, useEffect } from 'react';
-import API from '../api/axios';
+import axios from '../api/axios';
 
 const AuthContext = createContext(null);
 
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
 
     // Login with email/password
     const login = async (email, password) => {
-        const response = await API.post('/auth/login', { email, password });
+        const response = await axios.post('/auth/login', { email, password });
         const { token: newToken, user: newUser } = response.data;
 
         setToken(newToken);
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
 
     // LDAP login
     const ldapLogin = async (username, password) => {
-        const response = await API.post('/auth/ldap-login', { username, password });
+        const response = await axios.post('/auth/ldap-login', { username, password });
         const { token: newToken, user: newUser } = response.data;
 
         setToken(newToken);
@@ -59,18 +59,18 @@ export const AuthProvider = ({ children }) => {
 
     // Register
     const register = async (data) => {
-        const response = await API.post('/auth/register', data);
+        const response = await axios.post('/auth/register', data);
         return response.data;
     };
 
     // Request Access OTP
     const requestAccessOtp = async (email) => {
-        return await API.post('/auth/request-access-otp', { email });
+        return await axios.post('/auth/request-access-otp', { email });
     };
 
     // Verify Access OTP
     const verifyAccessOtp = async (email, otp) => {
-        const res = await API.post('/auth/verify-access-otp', { email, otp });
+        const res = await axios.post('/auth/verify-access-otp', { email, otp });
         const { token: newToken, user: userData } = res.data;
         setUser(userData);
         setToken(newToken);
@@ -81,20 +81,20 @@ export const AuthProvider = ({ children }) => {
 
     // Verify OTP
     const verifyOtp = async (email, otp) => {
-        const response = await API.post('/auth/verify-otp', { email, otp });
+        const response = await axios.post('/auth/verify-otp', { email, otp });
         return response.data;
     };
 
     // Resend OTP
     const resendOtp = async (email, purpose = 'registration') => {
-        const response = await API.post('/auth/resend-otp', { email, purpose });
+        const response = await axios.post('/auth/resend-otp', { email, purpose });
         return response.data;
     };
 
     // Logout
     const logout = async () => {
         try {
-            await API.post('/auth/logout');
+            await axios.post('/auth/logout');
         } catch (err) {
             // Ignore errors (e.g., token already expired)
         }

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import API from '../api/axios';
+import axios from '../api/axios';
 import TicketCard from '../components/TicketCard';
 import { HiOutlineSearch, HiOutlineFilter, HiOutlinePlusCircle, HiOutlineTicket } from 'react-icons/hi';
 
@@ -26,7 +26,7 @@ const TicketList = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await API.get('/tickets/categories');
+                const res = await axios.get('/tickets/categories');
                 setCategories(res.data.categories || []);
             } catch (err) {
                 console.error(err);
@@ -48,7 +48,7 @@ const TicketList = () => {
             if (filters.category_id) params.category_id = filters.category_id;
             params.page = filters.page;
 
-            const res = await API.get('/tickets', { params });
+            const res = await axios.get('/tickets', { params });
             setTickets(res.data.tickets || []);
             setPagination(res.data.pagination || { page: 1, pages: 1, total: 0 });
         } catch (err) {

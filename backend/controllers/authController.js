@@ -89,6 +89,7 @@ const verifyRegistrationOTP = async (req, res, next) => {
  */
 const requestAccessOtp = async (req, res, next) => {
     try {
+        console.log("hii")
         if (!req.body.email) return res.status(400).json({ error: 'Email is required.' });
         const email = req.body.email.toLowerCase().trim();
 

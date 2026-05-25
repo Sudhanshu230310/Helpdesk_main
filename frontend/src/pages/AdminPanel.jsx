@@ -2,7 +2,7 @@
 // Admin Panel — Teams, Categories, Users management
 // ============================================================
 import { useState, useEffect } from 'react';
-import API from '../api/axios';
+import axios from '../api/axios';
 import {
     HiOutlineUserGroup, HiOutlineTag, HiOutlineUsers,
     HiOutlinePlus, HiOutlineCalendar, HiOutlineCog,
@@ -39,19 +39,19 @@ const AdminPanel = ({ showNotification }) => {
         setLoading(true);
         try {
             if (activeTab === 'teams') {
-                const res = await API.get('/admin/teams');
+                const res = await axios.get('/admin/teams');
                 setTeams(res.data.teams || []);
             } else if (activeTab === 'categories') {
-                const res = await API.get('/admin/categories');
+                const res = await axios.get('/admin/categories');
                 setCategories(res.data.categories || []);
             } else if (activeTab === 'users') {
-                const res = await API.get('/admin/users');
+                const res = await axios.get('/admin/users');
                 setUsers(res.data.users || []);
             } else if (activeTab === 'holidays') {
-                const res = await API.get('/admin/holidays');
+                const res = await axios.get('/admin/holidays');
                 setHolidays(res.data.holidays || []);
             } else if (activeTab === 'settings') {
-                const res = await API.get('/admin/settings');
+                const res = await axios.get('/admin/settings');
                 setSettings(res.data.settings || {});
             }
         } catch (err) {
@@ -64,7 +64,7 @@ const AdminPanel = ({ showNotification }) => {
     const handleCreateTeam = async (e) => {
         e.preventDefault();
         try {
-            await API.post('/admin/teams', teamForm);
+            await axios.post('/admin/teams', teamForm);
             setTeamForm({ name: '', description: '' });
             setShowTeamForm(false);
             showNotification('Team created!');
@@ -77,7 +77,7 @@ const AdminPanel = ({ showNotification }) => {
     const handleCreateCategory = async (e) => {
         e.preventDefault();
         try {
-            await API.post('/admin/categories', catForm);
+            await axios.post('/admin/categories', catForm);
             setCatForm({ name: '', description: '' });
             setShowCatForm(false);
             showNotification('Category created!');
@@ -90,7 +90,7 @@ const AdminPanel = ({ showNotification }) => {
     const handleCreateSubcategory = async (e) => {
         e.preventDefault();
         try {
-            await API.post('/admin/subcategories', {
+            await axios.post('/admin/subcategories', {
                 ...subForm,
                 category_id: parseInt(subForm.category_id),
                 assigned_team_id: subForm.assigned_team_id ? parseInt(subForm.assigned_team_id) : null,
@@ -107,7 +107,7 @@ const AdminPanel = ({ showNotification }) => {
     const handleCreateUser = async (e) => {
         e.preventDefault();
         try {
-            await API.post('/admin/users', userForm);
+            await axios.post('/admin/users', userForm);
             setUserForm({ name: '', email: '', role: 'user', department: '', phone: '', team_id: '', password: '' });
             setShowUserForm(false);
             showNotification('User created! Welcome email sent.');
@@ -119,7 +119,7 @@ const AdminPanel = ({ showNotification }) => {
     const handleCreateHoliday = async (e) => {
         e.preventDefault();
         try {
-            await API.post('/admin/holidays', holidayForm);
+            await axios.post('/admin/holidays', holidayForm);
             setHolidayForm({ name: '', holiday_date: '', is_recurring: false });
             setShowHolidayForm(false);
             showNotification('Holiday created successfully!');
@@ -135,7 +135,7 @@ const AdminPanel = ({ showNotification }) => {
         const formData = new FormData();
         formData.append('csvFile', bulkFile);
         try {
-            const res = await API.post('/admin/users/bulk', formData, {
+            const res = await axios.post('/admin/users/bulk', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setBulkFile(null);
@@ -398,7 +398,7 @@ const AdminPanel = ({ showNotification }) => {
                                                     <button onClick={async () => {
                                                         if (window.confirm('Delete this user?')) {
                                                             try {
-                                                                await API.delete(`/admin/users/${u.id}`);
+                                                                await axios.delete(`/admin/users/${u.id}`);
                                                                 showNotification('User deleted');
                                                                 fetchData();
                                                             } catch (err) {
@@ -461,7 +461,7 @@ const AdminPanel = ({ showNotification }) => {
                                         <button onClick={async () => {
                                             if (window.confirm('Delete this holiday?')) {
                                                 try {
-                                                    await API.delete(`/admin/holidays/${h.id}`);
+                                                    await axios.delete(`/admin/holidays/${h.id}`);
                                                     showNotification('Holiday deleted');
                                                     fetchData();
                                                 } catch (err) {
@@ -485,7 +485,7 @@ const AdminPanel = ({ showNotification }) => {
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
                                     try {
-                                        await API.post('/admin/settings', { key: 'otp_enabled', value: settings.otp_enabled === 'true' || settings.otp_enabled === true ? 'false' : 'true' });
+                                        await axios.post('/admin/settings', { key: 'otp_enabled', value: settings.otp_enabled === 'true' || settings.otp_enabled === true ? 'false' : 'true' });
                                         showNotification('Settings saved!');
                                         fetchData();
                                     } catch (err) {

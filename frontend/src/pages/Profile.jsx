@@ -3,7 +3,7 @@
 // ============================================================
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import API from '../api/axios';
+import axios from '../api/axios';
 import { 
     HiOutlineUser, HiOutlineMail, HiOutlinePhone, 
     HiOutlineOfficeBuilding, HiOutlineBell, HiOutlineCheckCircle,
@@ -37,7 +37,7 @@ const Profile = ({ showNotification }) => {
         setLoading(true);
 
         try {
-            const res = await API.put('/users/profile', formData);
+            const res = await axios.put('/users/profile', formData);
 
             // Update local user context
             const updatedUser = { ...user, ...res.data.user };

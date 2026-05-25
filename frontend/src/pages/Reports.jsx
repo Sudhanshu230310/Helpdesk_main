@@ -2,7 +2,7 @@
 // Reports Page — Charts and metrics
 // ============================================================
 import { useState, useEffect } from 'react';
-import API from '../api/axios';
+import axios from '../api/axios';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
@@ -31,9 +31,9 @@ const Reports = ({ showNotification }) => {
             if (dateRange.end_date) params.end_date = dateRange.end_date;
 
             const [catRes, subRes, techRes] = await Promise.all([
-                API.get('/admin/reports/by-category', { params }),
-                API.get('/admin/reports/by-subcategory', { params }),
-                API.get('/admin/reports/by-technician', { params }).catch(() => ({ data: { report: [] } })),
+                axios.get('/admin/reports/by-category', { params }),
+                axios.get('/admin/reports/by-subcategory', { params }),
+                axios.get('/admin/reports/by-technician', { params }).catch(() => ({ data: { report: [] } })),
             ]);
 
             setCategoryData(catRes.data.report || []);
@@ -109,7 +109,7 @@ const Reports = ({ showNotification }) => {
                                 const params = {};
                                 if (dateRange.start_date) params.start_date = dateRange.start_date;
                                 if (dateRange.end_date) params.end_date = dateRange.end_date;
-                                const response = await API.get('/admin/reports/pdf', { 
+                                const response = await axios.get('/admin/reports/pdf', { 
                                     params,
                                     responseType: 'blob' 
                                 });

@@ -2,7 +2,7 @@
 // DynamicForm — Renders conditional form fields from config
 // ============================================================
 import { useState, useEffect } from 'react';
-import API from '../api/axios';
+import axios from '../api/axios';
 
 const DynamicForm = ({ subcategoryId, formData, onChange }) => {
     const [fields, setFields] = useState([]);
@@ -17,7 +17,7 @@ const DynamicForm = ({ subcategoryId, formData, onChange }) => {
         const fetchFields = async () => {
             setLoading(true);
             try {
-                const res = await API.get(`/tickets/form-fields/${subcategoryId}`);
+                const res = await axios.get(`/tickets/form-fields/${subcategoryId}`);
                 setFields(res.data.fields || []);
             } catch (err) {
                 console.error('Failed to load form fields:', err);

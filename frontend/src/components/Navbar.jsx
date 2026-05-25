@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { HiOutlineMenuAlt2, HiOutlineBell, HiOutlineLogout, HiOutlinePlus } from 'react-icons/hi';
-import API from '../api/axios';
+import axios from '../api/axios';
 import NotificationPanel from './NotificationPanel';
 
 const Navbar = ({ onToggleSidebar }) => {
@@ -35,7 +35,7 @@ const Navbar = ({ onToggleSidebar }) => {
 
     const fetchNotifications = async () => {
         try {
-            const res = await API.get('/notifications');
+            const res = await axios.get('/notifications');
             setNotifications(res.data.notifications);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
@@ -44,7 +44,7 @@ const Navbar = ({ onToggleSidebar }) => {
 
     const markRead = async (id) => {
         try {
-            await API.put(`/notifications/${id}/read`);
+            await axios.put(`/notifications/${id}/read`);
             setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
         } catch (err) {
             console.error('Failed to mark read:', err);
@@ -53,7 +53,7 @@ const Navbar = ({ onToggleSidebar }) => {
 
     const markAllRead = async () => {
         try {
-            await API.put('/notifications/read-all');
+            await axios.put('/notifications/read-all');
             setNotifications(notifications.map(n => ({ ...n, is_read: true })));
         } catch (err) {
             console.error('Failed to mark all read:', err);
